@@ -1,0 +1,3 @@
+{"input":"What is the purpose of a validation split?","output":"It estimates generalization during development and helps compare settings without tuning on the final test split."}
+{"messages":[{"role":"user","content":"Name one safe default for a learning notebook."},{"role":"assistant","content":"Keep model downloads, training, server launches, and external API calls disabled until the learner explicitly enables them."}]}
+{"input":"What is TensorRT-LLM used for?","output":"TensorRT-LLM optimizes and runs large-language-model inference on supported NVIDIA GPUs."}

@@ -1,0 +1,50 @@
+# Educational NeMo/Qwen LoRA configuration. Paths are relative to the project root.
+
+model:
+  # Primary model name used by the current NeMo-oriented path.
+  name: Qwen/Qwen3-1.7B
+  # Smaller Hugging Face model for optional local inference demonstrations.
+  local_alternative: Qwen/Qwen2.5-1.5B-Instruct
+
+data:
+  # Training and validation data paths. Both supported schemas are validated first.
+  train_path: data/train.jsonl
+  validation_path: data/validation.jsonl
+  test_path: data/test.jsonl
+  max_sequence_length: 512
+
+output:
+  # Output path for logs, adapters, and checkpoints; ignored by Git.
+  path: outputs/qwen3_1p7b_lora
+
+lora:
+  # LoRA rank (called `dim` by the NeMo 2.0 LoRA object).
+  rank: 16
+  # LoRA scaling alpha. A common educational starting point is 2 * rank.
+  alpha: 32
+  # Adapter dropout probability.
+  dropout: 0.05
+  target_modules:
+    - linear_qkv
+    - linear_proj
+    - linear_fc1
+    - linear_fc2
+
+training:
+  # Conservative learning rate for a tiny demonstration dataset.
+  learning_rate: 0.0002
+  # Per-device micro batch size.
+  batch_size: 1
+  # Effective batch size before data-parallel scaling; use accumulation as needed.
+  global_batch_size: 8
+  # Number of complete passes through the training split.
+  epochs: 1
+  # Prefer bf16 on supported modern NVIDIA GPUs; use 16-mixed or 32 as appropriate.
+  precision: bf16-mixed
+  num_gpus: 1
+  seed: 42
+
+smoke_test:
+  # Keep enabled for the first GPU run. Disable only after two steps succeed.
+  enabled: true
+  max_steps: 2
