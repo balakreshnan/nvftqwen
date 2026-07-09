@@ -1,0 +1,13 @@
+# Includes the terminal/Jupyter and optional small-model packages.
+-r requirements-local.txt
+
+# Common Hugging Face training/evaluation helpers.
+datasets>=3.2,<5
+peft>=0.14,<1
+trl>=0.15,<1
+
+# NeMo 2.0 LLM and recipe tooling. NVIDIA does not support the NeMo Framework
+# on native Windows, so these packages are selected only on Linux. For real LLM
+# training, prefer a pinned NVIDIA NeMo container and its bundled dependencies.
+nemo-toolkit[llm]>=2.4; sys_platform == "linux"
+nemo-run>=0.4; sys_platform == "linux"

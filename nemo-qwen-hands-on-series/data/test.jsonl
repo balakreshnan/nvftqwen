@@ -1,0 +1,3 @@
+{"messages":[{"role":"user","content":"Contrast LoRA with full fine-tuning in one sentence."},{"role":"assistant","content":"LoRA learns compact adapter updates while full fine-tuning changes all or most base model parameters."}]}
+{"input":"What should you verify before selecting a NIM container?","output":"Verify the current NIM support matrix, image tag, model profile, GPU requirements, licensing terms, and credential requirements."}
+{"messages":[{"role":"user","content":"Why keep a held-out test set?"},{"role":"assistant","content":"A held-out test set provides a less biased final estimate after training and configuration choices are complete."}]}

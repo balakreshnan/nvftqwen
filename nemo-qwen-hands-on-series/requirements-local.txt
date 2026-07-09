@@ -1,0 +1,21 @@
+# Notebook and data tooling (CPU-safe)
+# NumPy 1.26 supports Python 3.9-3.12 only. Python 3.13 needs NumPy 2.1+
+# so pip can install a wheel instead of attempting an unsupported source build.
+numpy>=2.1,<3; python_version >= "3.13"
+numpy>=1.26,<3; python_version < "3.13"
+jupyterlab>=4.2,<5
+notebook>=7.2,<8
+ipykernel>=6.29,<7
+PyYAML>=6.0,<7
+jsonschema>=4.22,<5
+requests>=2.32,<3
+openai>=1.55,<3
+
+# Optional small-model inference from Notebook 1.
+# A CPU PyTorch wheel is sufficient for the default laptop path. On CUDA hosts,
+# install the PyTorch build recommended for the host CUDA version first.
+torch>=2.3
+transformers>=4.51,<6
+accelerate>=1.2,<2
+safetensors>=0.4,<1
+sentencepiece>=0.2,<1
