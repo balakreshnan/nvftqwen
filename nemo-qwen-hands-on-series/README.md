@@ -142,6 +142,68 @@ python scripts/local_inference.py "What is LoRA?" --offline
 
 Run `python scripts/local_inference.py --help` for every option. The script defaults to deterministic generation; pass a positive `--temperature` to enable sampling.
 
+### Windows Command Prompt: NVIDIA GPU inference
+
+The following commands are for Windows Command Prompt (`cmd.exe`), not PowerShell. Open Command Prompt and change to the project directory. The `/d` option also changes drives when the project is not on the current drive:
+
+```cmd
+cd /d C:\Code\finetuning\nvftqwen\nemo-qwen-hands-on-series
+```
+
+Activate the virtual environment:
+
+```cmd
+.venv\Scripts\activate.bat
+```
+
+The prompt should now begin with `(.venv)`. Confirm that `python` resolves to the virtual environment:
+
+```cmd
+where python
+python --version
+```
+
+Upgrade the Python packaging tools, then install the complete pinned GPU environment. `requirements-gpu.txt` already selects the CUDA 13.0 PyTorch index and installs the compatible PyTorch, TorchVision, and TorchAudio packages, so a separate unpinned `pip install torch torchvision torchaudio` command is not needed:
+
+```cmd
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install --upgrade -r requirements-gpu.txt
+python -m pip check
+```
+
+Verify the installed package versions and confirm that PyTorch can access the NVIDIA GPU:
+
+```cmd
+python -c "import torch, torchvision, torchaudio; print('PyTorch:', torch.__version__); print('TorchVision:', torchvision.__version__); print('TorchAudio:', torchaudio.__version__); print('CUDA runtime:', torch.version.cuda); print('CUDA available:', torch.cuda.is_available()); print('GPU:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'None')"
+python scripts\check_gpu.py
+```
+
+Run the first local inference example on the GPU:
+
+```cmd
+python scripts\local_inference.py "Explain LoRA in two short sentences." --device cuda --dtype bfloat16 --max-new-tokens 2000
+```
+
+Run a second prompt:
+
+```cmd
+python scripts\local_inference.py "Explain quantum computing" --device cuda --dtype bfloat16 --max-new-tokens 2000
+```
+
+`--max-new-tokens 2000` is an upper limit rather than a required response length. For the first smoke test, use `--max-new-tokens 128` if you want a faster result. If generation runs out of GPU memory, reduce this value or use `Qwen/Qwen2.5-0.5B-Instruct` with `--model`.
+
+To monitor GPU memory and utilization continuously, open a second Command Prompt window and run:
+
+```cmd
+nvidia-smi -l 1
+```
+
+Press `Ctrl+C` to stop monitoring. When finished with the virtual environment, run:
+
+```cmd
+deactivate
+```
+
 ## 5. Run the notebooks in order
 
 | Order | Notebook | Default behavior | Infrastructure |
