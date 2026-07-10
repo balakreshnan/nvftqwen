@@ -1,0 +1,15 @@
+# CUDA 13.0 GPU environment for local Qwen inference.
+# Tested package family with Windows/Linux CPython 3.13 wheels.
+# A recent NVIDIA driver is required; the PyTorch wheels include the CUDA runtime.
+
+# Keep PyPI as the normal package source and add NVIDIA/PyTorch's CUDA wheel index.
+--extra-index-url https://download.pytorch.org/whl/cu130
+
+# Notebook, Transformers, Accelerate, and local inference dependencies.
+-r requirements-local.txt
+
+# Matched CUDA 13.0 PyTorch package family. TorchAudio's current compatible
+# release determines this common 2.11/0.26/2.11 version set.
+torch==2.11.0+cu130
+torchvision==0.26.0+cu130
+torchaudio==2.11.0+cu130
