@@ -47,6 +47,19 @@ For laptop-safe data work, notebooks, and optional small-model inference:
 python -m pip install -r requirements-local.txt
 ```
 
+For local CUDA inference on a Windows or Linux workstation with a recent NVIDIA GPU and driver:
+
+```bash
+python -m pip install --upgrade -r requirements-gpu.txt
+```
+
+`requirements-gpu.txt` installs a matched CUDA 13.0 package family: PyTorch 2.11.0, TorchVision 0.26.0, and TorchAudio 2.11.0. These releases provide CPython 3.13 Windows wheels. Verify the installation before downloading a model:
+
+```bash
+python -c "import torch, torchvision, torchaudio; print(torch.__version__, torchvision.__version__, torchaudio.__version__); print('CUDA:', torch.version.cuda); print('Available:', torch.cuda.is_available()); print('GPU:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'None')"
+python scripts/check_gpu.py
+```
+
 For the NeMo-oriented learning environment on a compatible CUDA/Linux host:
 
 ```bash
@@ -107,6 +120,27 @@ Inspect the local Python/PyTorch/CUDA environment:
 ```bash
 python scripts/check_gpu.py
 ```
+
+Run the small local Qwen inference example from Notebook 1 directly in a terminal:
+
+```bash
+python scripts/local_inference.py "Explain LoRA in two short sentences."
+```
+
+The default model is `Qwen/Qwen2.5-1.5B-Instruct`. Its files are downloaded from Hugging Face on first use and then reused from the local cache. CPU inference is supported but can be slow and may require roughly 8 GB or more of available system memory. Useful options include:
+
+```bash
+# Force CPU and limit the response length.
+python scripts/local_inference.py "What is NeMo?" --device cpu --max-new-tokens 64
+
+# Use the Qwen3 model introduced in the NeMo path (requires more resources).
+python scripts/local_inference.py "What is LoRA?" --model Qwen/Qwen3-1.7B
+
+# Use already-cached files without a network request.
+python scripts/local_inference.py "What is LoRA?" --offline
+```
+
+Run `python scripts/local_inference.py --help` for every option. The script defaults to deterministic generation; pass a positive `--temperature` to enable sampling.
 
 ## 5. Run the notebooks in order
 
