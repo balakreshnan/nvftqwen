@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_MODEL = "Qwen/Qwen2.5-1.5B-Instruct"
-DEFAULT_PROMPT = "Explain LoRA in two short sentences."
+DEFAULT_PROMPT = "Explain LoRA in five short sentences."
 
 
 def parse_args() -> argparse.Namespace:
