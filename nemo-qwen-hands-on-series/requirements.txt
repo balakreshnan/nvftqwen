@@ -11,3 +11,5 @@ trl>=0.15,<1
 # training, prefer a pinned NVIDIA NeMo container and its bundled dependencies.
 nemo-toolkit[llm]>=2.4; sys_platform == "linux"
 nemo-run>=0.4; sys_platform == "linux"
+python-dotenv
+Gradio

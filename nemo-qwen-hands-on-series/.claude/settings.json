@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command \"& 'C:\\\\Code\\\\finetuning\\\\nvftqwen\\\\nemo-qwen-hands-on-series\\\\.venv\\\\Scripts\\\\python.exe' -c \\\\\"import inspect, gradio as gr; sig = inspect.signature\\(gr.Column.__init__\\); print\\(list\\(sig.parameters.keys\\(\\)\\)\\)\\\\\"\")",
+      "Read(//c/Users/bbalakreshna/.claude/**)",
+      "Read(//c/ProgramData/ClaudeCode/**)",
+      "Read(//c/ProgramData/**)",
+      "Bash(grep -n -i 'model' ~/.claude/remote-settings.json 2>/dev/null | head -20)"
+    ]
+  }
+}
