@@ -18,5 +18,6 @@
 #   .venv-aiq/Scripts/python.exe scripts/graiqnim.py
 
 nvidia-nat[langchain]~=1.8
+nemoguardrails~=0.23   # 3rd agent: NeMo Guardrails safety rails (Nemotron)
 gradio>=6
 python-dotenv

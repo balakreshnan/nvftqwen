@@ -1,22 +1,25 @@
 """
-Agent IQ Chat — NVIDIA NeMo Agent Toolkit two-agent workflow, Gradio 6.
+Agent IQ Chat — NVIDIA NeMo Agent Toolkit three-agent workflow, Gradio 6.
 
 Backend (scripts/agentiq_backend.py) is built entirely on the NVIDIA NeMo Agent
 Toolkit (`nat`) — no OpenAI SDK:
 
-  1. answer_agent    — answers with the model in scripts/.env, served through the
-                       toolkit's NIM LLM provider (`_type: nim`).
-  2. evaluator_agent — Nemotron LLM-as-judge that tests the answer and returns a
-                       structured scorecard.
+  1. answer_agent     — answers with the model in scripts/.env, served through the
+                        toolkit's NIM LLM provider (`_type: nim`).
+  2. guardrails_agent — Nemotron agent wrapped in NVIDIA NeMo Guardrails; runs
+                        self-check input/output safety rails on the exchange.
+  3. evaluator_agent  — Nemotron LLM-as-judge that tests the guarded answer and
+                        returns a structured scorecard.
 
-Both are registered NeMo Agent Toolkit functions, orchestrated by a WorkflowBuilder.
+All are registered NeMo Agent Toolkit functions, orchestrated by a WorkflowBuilder.
 
 IMPORTANT: run this app with the toolkit venv (Python 3.12):
     .venv-aiq/Scripts/python.exe scripts/graiqnim.py
 
 Layout: single viewport, no page scroll. History scrolls inside its own
-container; the chat input is pinned at the bottom. The Nemotron evaluation
-scorecard sits in a side panel so the latest assessment is always visible.
+container; the chat input is pinned at the bottom. The NeMo Guardrails decision
+and the Nemotron evaluation scorecard sit in a side panel so the latest safety
+verdict and assessment are always visible.
 """
 
 from __future__ import annotations
@@ -111,6 +114,53 @@ def render_evaluation(ev: dict[str, Any] | None) -> str:
       </div>
       {raw_note}
       <div class="eval-backend">judged by {MODEL} via {BACKEND_LABEL}</div>
+    </div>
+    """
+
+
+# ── Guardrails decision rendering ─────────────────────────────────────────────
+def _rail_chip(label: str, blocked: bool, fired: bool) -> str:
+    if blocked:
+        fg, bg, txt = "#B3261E", "#FCE9E7", "BLOCKED"
+    elif fired:
+        fg, bg, txt = "#0E7C4A", "#E4F5EC", "PASSED"
+    else:
+        fg, bg, txt = "#5A6472", "#EEF1F5", "NOT RUN"
+    return (
+        f"<div class='rail-row'><span class='rail-label'>{label}</span>"
+        f"<span class='rail-state' style='color:{fg};background:{bg}'>{txt}</span></div>"
+    )
+
+
+def render_guardrails(g: dict[str, Any] | None) -> str:
+    if not g:
+        return (
+            '<div class="eval-empty">'
+            "<div class='eval-empty-icon'>🛡️</div>"
+            "<div>NeMo Guardrails will report its input/output safety verdict here.</div>"
+            "</div>"
+        )
+
+    allowed = bool(g.get("allowed", True))
+    fg, bg = ("#0E7C4A", "#E4F5EC") if allowed else ("#B3261E", "#FCE9E7")
+    headline = "ALLOWED" if allowed else "BLOCKED"
+
+    in_fired = "self check input" in (g.get("input_flows") or [])
+    out_fired = "self check output" in (g.get("output_flows") or [])
+    rows = (
+        _rail_chip("Input rail", bool(g.get("input_blocked")), in_fired)
+        + _rail_chip("Output rail", bool(g.get("output_blocked")), out_fired)
+    )
+    policy = g.get("policy", "—")
+
+    return f"""
+    <div class="eval-card">
+      <div class="eval-head">
+        <span class="verdict-chip" style="color:{fg};background:{bg}">{headline}</span>
+        <span class="eval-overall">policy: <b>{policy}</b></span>
+      </div>
+      <div class="rail-list">{rows}</div>
+      <div class="eval-backend">enforced by NeMo Guardrails · {MODEL}</div>
     </div>
     """
 
@@ -297,6 +347,12 @@ footer { display: none !important; }
 .eval-raw pre { background: #F4F6FA; border: 1px solid var(--line); border-radius: 8px; padding: 8px; font-size: 11px; overflow-x: auto; }
 .eval-backend { margin-top: 16px; font-size: 11px; color: var(--text-soft); border-top: 1px solid var(--line); padding-top: 8px; }
 
+/* Guardrails rails */
+.rail-list { margin: 6px 0 2px; }
+.rail-row { display: flex; align-items: center; justify-content: space-between; margin: 8px 0; }
+.rail-label { font-size: 13px; color: var(--text); }
+.rail-state { font-size: 11px; font-weight: 800; letter-spacing: .5px; padding: 3px 10px; border-radius: 100px; }
+
 ::-webkit-scrollbar { width: 7px; }
 ::-webkit-scrollbar-thumb { background: #C7D0DE; border-radius: 4px; }
 """
@@ -321,7 +377,7 @@ with gr.Blocks(title="Agent IQ Chat", fill_height=True) as demo:
       </svg>
       <div>
         <h1>Agent IQ Chat</h1>
-        <div class="sub">Answer Agent + Nemotron Evaluator</div>
+        <div class="sub">Answer Agent + NeMo Guardrails + Nemotron Evaluator</div>
       </div>
       <div class="spacer"></div>
       <span class="pill">{BACKEND_LABEL}</span>
@@ -364,9 +420,14 @@ with gr.Blocks(title="Agent IQ Chat", fill_height=True) as demo:
                 send_btn = gr.Button("Send", scale=1, min_width=76, elem_id="aiq-send")
                 clear_btn = gr.Button("Clear", scale=0, min_width=64, elem_id="aiq-clear")
 
-        # ── Evaluation panel ────────────────────────────────────────────────────
+        # ── Guardrails + Evaluation panels (stacked) ────────────────────────────
         with gr.Column(scale=2, elem_classes=["aiq-evalcol"]):
-            gr.HTML('<div class="panel-title"><span class="dot"></span>Nemotron Evaluator</div>')
+            gr.HTML('<div class="panel-title"><span class="dot"></span>NeMo Guardrails</div>')
+            guard_panel = gr.HTML(
+                value=render_guardrails(None),
+                elem_classes=["eval-scroll"],
+            )
+            gr.HTML('<div class="panel-title" style="margin-top:10px"><span class="dot"></span>Nemotron Evaluator</div>')
             eval_panel = gr.HTML(
                 value=render_evaluation(None),
                 elem_classes=["eval-scroll"],
@@ -375,10 +436,13 @@ with gr.Blocks(title="Agent IQ Chat", fill_height=True) as demo:
     # ── Event handling ──────────────────────────────────────────────────────────
     async def respond(message: str, history: list[dict], temperature: float, max_tokens: int):
         if not message.strip():
-            return history, history, "", gr.update()
+            return history, history, "", gr.update(), gr.update()
 
+        guardrails: dict | None = None
         try:
-            answer, evaluation = await run_workflow(message, history, temperature, max_tokens)
+            answer, guardrails, evaluation = await run_workflow(
+                message, history, temperature, max_tokens
+            )
         except EndpointBusyError:
             answer = (
                 "⏳ **The NVIDIA endpoint is at capacity right now** "
@@ -394,18 +458,20 @@ with gr.Blocks(title="Agent IQ Chat", fill_height=True) as demo:
             {"role": "user", "content": message},
             {"role": "assistant", "content": answer},
         ]
-        return new_hist, new_hist, "", render_evaluation(evaluation)
+        return new_hist, new_hist, "", render_guardrails(guardrails), render_evaluation(evaluation)
 
     inputs = [msg_input, history_state, temperature_state, max_tokens_state]
-    outputs = [chatbot, history_state, msg_input, eval_panel]
+    outputs = [chatbot, history_state, msg_input, guard_panel, eval_panel]
 
     msg_input.submit(respond, inputs, outputs)
     send_btn.click(respond, inputs, outputs)
 
     def clear_all():
-        return [], [], "", render_evaluation(None)
+        return [], [], "", render_guardrails(None), render_evaluation(None)
 
-    clear_btn.click(clear_all, outputs=[chatbot, history_state, msg_input, eval_panel])
+    clear_btn.click(
+        clear_all, outputs=[chatbot, history_state, msg_input, guard_panel, eval_panel]
+    )
 
 
 if __name__ == "__main__":
