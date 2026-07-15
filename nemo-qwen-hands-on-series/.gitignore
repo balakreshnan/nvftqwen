@@ -8,6 +8,7 @@ __pycache__/
 
 # Virtual environments and local secrets
 .venv/
+.venv-aiq/
 venv/
 .env
 .env.*

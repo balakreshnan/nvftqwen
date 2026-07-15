@@ -1,0 +1,22 @@
+# Agent IQ app (graiqnim.py + agentiq_backend.py) dependencies.
+#
+# The NVIDIA NeMo Agent Toolkit targets Python 3.11-3.12. It does NOT install on
+# Python 3.13 (a litellm dependency needs a Rust/MSVC build with no cp313 wheel).
+#
+# Reproduce the environment with uv (auto-provisions Python 3.12):
+#
+#   pip install uv
+#   uv venv .venv-aiq --python 3.12
+#   printf 'litellm==1.77.5\n' > overrides.txt
+#   uv pip install --python .venv-aiq/Scripts/python.exe \
+#       --override overrides.txt -r scripts/requirements-agentiq.txt
+#
+# The litellm override pins a pure-Python wheel; newer litellm (>=1.92) requires a
+# native Rust build (MSVC linker) that is unavailable on this Windows machine.
+#
+# Run the app with the toolkit venv:
+#   .venv-aiq/Scripts/python.exe scripts/graiqnim.py
+
+nvidia-nat[langchain]~=1.8
+gradio>=6
+python-dotenv
